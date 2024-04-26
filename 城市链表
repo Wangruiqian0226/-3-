@@ -1,0 +1,228 @@
+#include <iostream>
+#include <cmath>
+#include <string>
+#include <vector>
+using namespace std;
+
+// 链表节点的结构体，包含城市名、坐标和指向下一个节点的指针
+struct CityNode
+{
+    string name;
+    float x;
+    float y;
+    CityNode* next;
+};
+
+// 链表的结构体，包含头结点指针和所有的链表操作
+class CityList
+{
+public:
+    CityNode* head; // 头结点
+
+public:
+    CityList()
+    { // 构造函数
+        head = new CityNode(); // 头结点
+    }
+
+    ~CityList()
+    {
+        // 析构函数，释放链表
+        CityNode* current = head;
+        while (current)
+        {
+            CityNode* node_to_delete = current;
+            current = current->next;
+            delete node_to_delete;
+        }
+    }
+
+    // 添加城市节点
+    void add_city(string name, float x, float y)
+    {
+        CityNode* new_node = new CityNode();
+        new_node->name = name;
+        new_node->x = x;
+        new_node->y = y;
+        new_node->next = nullptr;
+
+        CityNode* current_node = head;
+        while (current_node->next != nullptr)
+        {
+            current_node = current_node->next;
+        }
+        current_node->next = new_node;
+    }
+
+    // 通过城市名查找节点
+    CityNode* find_city_by_name(string name)
+    {
+        CityNode* current_node = head->next;
+        while (current_node != nullptr)
+        {
+            if (current_node->name == name)
+            {
+                return current_node;
+            }
+            current_node = current_node->next;
+        }
+        return nullptr;
+    }
+
+    // 通过城市名删除节点
+    bool remove_city_by_name(string name)
+    {
+        CityNode* previous_node = head;
+        CityNode* current_node = head->next;
+        while (current_node != nullptr)
+        {
+            if (current_node->name == name)
+            {
+                previous_node->next = current_node->next;
+                delete current_node;
+                return true;
+            }
+            previous_node = current_node;
+            current_node = current_node->next;
+        }
+        return false;
+    }
+
+    // 通过城市名更新节点
+    bool update_city(string name, float x, float y)
+    {
+        CityNode* current_node = find_city_by_name(name);
+        if (current_node != nullptr)
+        {
+            current_node->x = x;
+            current_node->y = y;
+            return true;
+        }
+        return false;
+    }
+
+    // 通过距离查找城市
+    vector<string> find_cities_within_distance(float x, float y, float distance)
+    {
+        CityNode* current_node = head->next;
+        vector<string> result;
+        while (current_node != nullptr)
+        {
+            float distance_squared = pow(current_node->x - x, 2) + pow(current_node->y - y, 2);
+            if (distance_squared <= pow(distance, 2))
+            {
+                result.push_back(current_node->name);
+            }
+            current_node = current_node->next;
+        }
+        return result;
+    }
+
+};
+
+int main()
+{
+    // 创建一个城市列表
+    CityList cities;
+
+    // 循环读入每个城市的信息并添加到链表中
+    int num_cities;
+    cout << "请输入城市数量：";
+    cin >> num_cities;
+
+    for (int i = 0; i < num_cities; i++)
+    {
+        string name;
+        float x, y;
+        cout << "请输入城市名和坐标(x, y)：";
+        cin >> name >> x >> y;
+
+        cities.add_city(name, x, y);
+    }
+
+    // 打印所有城市的信息
+    cout << endl << "所有城市的信息：" << endl;
+    CityNode* current_node = cities.head->next;
+    while (current_node != nullptr)
+    {
+        cout << current_node->name << " (" << current_node->x << ", " << current_node->y << ")" << endl;
+        current_node = current_node->next;
+    }
+
+    // 通过城市名查找节点并返回位置坐标
+    string city_name;
+    cout << endl << "请输入要查找的城市名：";
+    cin >> city_name;
+
+    CityNode* found_city = cities.find_city_by_name(city_name);
+    if (found_city != nullptr)
+    {
+        cout << city_name << " 的位置坐标为 (" << found_city->x << ", " << found_city->y << ")" << endl;
+    }
+    else
+    {
+        cout << "未找到城市 " << city_name << endl;
+    }
+
+    // 通过距离查找城市并输出所有找到的城市
+    float x, y, distance;
+    cout << endl << "请输入坐标(x, y)和距离：";
+    cin >> x >> y >> distance;
+
+    vector<string> cities_within_distance = cities.find_cities_within_distance(x, y, distance);
+    if (cities_within_distance.empty())
+    {
+        cout << "没有找到附近的城市" << endl;
+    }
+    else
+    {
+        cout << "距离点 (" << x << ", " << y << ") 小于等于 " << distance << " 的城市有：" << endl;
+        for (string city_name : cities_within_distance)
+        {
+            cout << city_name << endl;
+        }
+    }
+
+    // 通过城市名更新节点并打印结果
+    string update_city_name;
+    float update_x, update_y;
+    cout << endl << "请输入要更新的城市名和坐标(x, y)：";
+    cin >> update_city_name >> update_x >> update_y;
+
+    if (cities.update_city(update_city_name, update_x, update_y))
+    {
+        cout << "成功将城市 " << update_city_name << " 的坐标更新为 (" << update_x << ", " << update_y << ")" << endl;
+        current_node = cities.head->next;
+        while (current_node != nullptr)
+        {
+            cout << current_node->name << " (" << current_node->x << ", " << current_node->y << ")" << endl;
+            current_node = current_node->next;
+        }
+    }
+    else
+    {
+        cout << "未找到城市 " << update_city_name << endl;
+    }
+
+    // 通过城市名删除节点并打印结果
+    string remove_city_name;
+    cout << endl << "请输入要删除的城市名：";
+    cin >> remove_city_name;
+
+    if (cities.remove_city_by_name(remove_city_name))
+    {
+        cout << "成功删除城市 " << remove_city_name << endl;
+        current_node = cities.head->next;
+        while (current_node != nullptr)
+        {
+            cout << current_node->name << " (" << current_node->x << ", " << current_node->y << ")" << endl;
+            current_node = current_node->next;
+        }
+    }
+    else
+    {
+        cout << "未找到城市 " << remove_city_name << endl;
+    }
+
+    return 0;
+}
